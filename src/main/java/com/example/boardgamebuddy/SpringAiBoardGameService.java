@@ -18,11 +18,12 @@ public class SpringAiBoardGameService implements BoardGameService {
 
     private final ChatClient chatClient;
     private final RelevancyEvaluator evaluator;
+    private final GameRulesService gameRulesService;
 
     @Value("classpath:/prompttemplates/questionPromptTemplate.st")
     Resource questionPromptTemplate;
 
-    public SpringAiBoardGameService(ChatClient.Builder chatClientBuilder) {
+    public SpringAiBoardGameService(ChatClient.Builder chatClientBuilder, GameRulesService gameRulesService) {
         ChatOptions chatOptions = ChatOptions.builder()
                 .model("gpt-4o-mini")
                 .build();
@@ -32,16 +33,20 @@ public class SpringAiBoardGameService implements BoardGameService {
                 .build();
 
         this.evaluator = new RelevancyEvaluator(chatClientBuilder);
+        this.gameRulesService = gameRulesService;
     }
 
     @Override
     @Retryable(retryFor = AnswerNotRelevantException.class)
     public Answer askQuestion(Question question) {
+        String rules = gameRulesService.getRulesFor(question.gameTitle());
+
         String answerText = chatClient.prompt()
                 .user(spec -> spec
                         .text(questionPromptTemplate)
                         .param("gameTitle", question.gameTitle())
-                        .param("question", question.question()))
+                        .param("question", question.question())
+                        .param("rules", rules))
                 .call()
                 .content();
 
