@@ -10,6 +10,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -41,21 +42,32 @@ public class SpringAiBoardGameService implements BoardGameService {
     public Answer askQuestion(Question question) {
         String rules = gameRulesService.getRulesFor(question.gameTitle());
 
-        String answerText = chatClient.prompt()
+        return chatClient.prompt()
                 .system(systemSpec -> systemSpec
                         .text(promptTemplate)
                         .param("gameTitle", question.gameTitle())
                         .param("rules", rules))
                 .user(question.question())
                 .call()
-                .content();
-
-        Answer answer = new Answer(question.gameTitle(), answerText);
-        evaluateRelevancy(question, answer);
-
-        return answer;
+                .entity(Answer.class);
     }
 
+    @Override
+    public Flux<String> streamQuestion(Question question) {
+        String rules = gameRulesService.getRulesFor(question.gameTitle());
+
+        return chatClient.prompt()
+                .system(systemSpec -> systemSpec
+                        .text(promptTemplate)
+                        .param("gameTitle", question.gameTitle())
+                        .param("rules", rules))
+                .user(question.question())
+                .stream()
+                .content();
+    }
+
+
+    // Evaluation Utils
     @Recover
     public Answer recover(AnswerNotRelevantException e) {
         return new Answer(null, "I'm sorry, I wasn't able to answer the question.");
