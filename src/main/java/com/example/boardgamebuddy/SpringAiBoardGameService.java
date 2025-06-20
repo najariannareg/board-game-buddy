@@ -1,7 +1,13 @@
 package com.example.boardgamebuddy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.evaluation.EvaluationRequest;
 import org.springframework.ai.evaluation.EvaluationResponse;
@@ -16,6 +22,8 @@ import java.util.List;
 
 @Service
 public class SpringAiBoardGameService implements BoardGameService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SpringAiBoardGameService.class);
 
     private final ChatClient chatClient;
     private final RelevancyEvaluator evaluator;
@@ -42,14 +50,18 @@ public class SpringAiBoardGameService implements BoardGameService {
     public Answer askQuestion(Question question) {
         String rules = gameRulesService.getRulesFor(question.gameTitle());
 
-        return chatClient.prompt()
+        var responseEntity = chatClient.prompt()
                 .system(systemSpec -> systemSpec
                         .text(promptTemplate)
                         .param("gameTitle", question.gameTitle())
                         .param("rules", rules))
                 .user(question.question())
                 .call()
-                .entity(Answer.class);
+                .responseEntity(Answer.class);
+
+        logUsage(responseEntity);
+
+        return responseEntity.entity();
     }
 
     @Override
@@ -64,6 +76,15 @@ public class SpringAiBoardGameService implements BoardGameService {
                 .user(question.question())
                 .stream()
                 .content();
+    }
+
+    private void logUsage(ResponseEntity<ChatResponse, Answer> responseEntity) {
+        ChatResponse response = responseEntity.response();
+        if (response != null) {
+            Usage usage = response.getMetadata().getUsage();
+            logger.info("Token usage: prompt={}, generation={}, total={}",
+                    usage.getPromptTokens(), usage.getCompletionTokens(), usage.getTotalTokens());
+        }
     }
 
 
