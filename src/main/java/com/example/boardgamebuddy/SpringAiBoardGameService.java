@@ -20,8 +20,8 @@ public class SpringAiBoardGameService implements BoardGameService {
     private final RelevancyEvaluator evaluator;
     private final GameRulesService gameRulesService;
 
-    @Value("classpath:/prompttemplates/questionPromptTemplate.st")
-    Resource questionPromptTemplate;
+    @Value("classpath:/prompttemplates/systemPromptTemplate.st")
+    Resource promptTemplate;
 
     public SpringAiBoardGameService(ChatClient.Builder chatClientBuilder, GameRulesService gameRulesService) {
         ChatOptions chatOptions = ChatOptions.builder()
@@ -42,11 +42,11 @@ public class SpringAiBoardGameService implements BoardGameService {
         String rules = gameRulesService.getRulesFor(question.gameTitle());
 
         String answerText = chatClient.prompt()
-                .user(spec -> spec
-                        .text(questionPromptTemplate)
+                .system(systemSpec -> systemSpec
+                        .text(promptTemplate)
                         .param("gameTitle", question.gameTitle())
-                        .param("question", question.question())
                         .param("rules", rules))
+                .user(question.question())
                 .call()
                 .content();
 
