@@ -32,10 +32,15 @@ public class SpringAiBoardGameService implements BoardGameService {
     @Override
     @Retryable(retryFor = AnswerNotRelevantException.class)
     public Answer askQuestion(Question question) {
-        Answer answer = new Answer(chatClient.prompt()
-                .user(question.question())
+        String prompt = "Answer this question about " + question.gameTitle() +
+                ": " + question.question();
+
+        String answerText = chatClient.prompt()
+                .user(prompt)
                 .call()
-                .content());
+                .content();
+
+        Answer answer = new Answer(question.gameTitle(), answerText);
 
         evaluateRelevancy(question, answer);
 
@@ -44,7 +49,7 @@ public class SpringAiBoardGameService implements BoardGameService {
 
     @Recover
     public Answer recover(AnswerNotRelevantException e) {
-        return new Answer("I'm sorry, I wasn't able to answer the question.");
+        return new Answer(null, "I'm sorry, I wasn't able to answer the question.");
     }
 
     private void evaluateRelevancy(Question question, Answer answer) {

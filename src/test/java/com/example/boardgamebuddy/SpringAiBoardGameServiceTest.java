@@ -32,8 +32,9 @@ class SpringAiBoardGameServiceTest {
 
     @Test
     void evaluateRelevancy() {
-        String userText = "Why is the sky blue?";
-        Question question = new Question(userText);
+        String gameTitle = "checkers";
+        String userText = "How many pieces are there?";
+        Question question = new Question(gameTitle, userText);
         Answer answer = boardGameService.askQuestion(question);
 
         EvaluationRequest evaluationRequest = new EvaluationRequest(userText, answer.answer());
@@ -44,8 +45,9 @@ class SpringAiBoardGameServiceTest {
 
     @Test
     void evaluateFactualAccuracy() {
-        String userText = "Why is the sky blue?";
-        Question question = new Question(userText);
+        String gameTitle = "checkers";
+        String userText = "How many pieces are there?";
+        Question question = new Question(gameTitle, userText);
         Answer answer = boardGameService.askQuestion(question);
 
         EvaluationRequest evaluationRequest = new EvaluationRequest(userText, answer.answer());
