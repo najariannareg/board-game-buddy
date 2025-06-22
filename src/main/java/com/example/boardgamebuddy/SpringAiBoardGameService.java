@@ -48,7 +48,7 @@ public class SpringAiBoardGameService implements BoardGameService {
     @Override
     @Retryable(retryFor = AnswerNotRelevantException.class)
     public Answer askQuestion(Question question) {
-        String rules = gameRulesService.getRulesFor(question.gameTitle());
+        String rules = gameRulesService.getRulesFor(question);
 
         var responseEntity = chatClient.prompt()
                 .system(systemSpec -> systemSpec
@@ -66,7 +66,7 @@ public class SpringAiBoardGameService implements BoardGameService {
 
     @Override
     public Flux<String> streamQuestion(Question question) {
-        String rules = gameRulesService.getRulesFor(question.gameTitle());
+        String rules = gameRulesService.getRulesFor(question);
 
         return chatClient.prompt()
                 .system(systemSpec -> systemSpec
