@@ -5,10 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.ResponseEntity;
 import org.springframework.ai.chat.evaluation.RelevancyEvaluator;
-import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.evaluation.EvaluationRequest;
 import org.springframework.ai.evaluation.EvaluationResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,15 +30,8 @@ public class SpringAiBoardGameService implements BoardGameService {
     @Value("classpath:/prompttemplates/systemPromptTemplate.st")
     Resource promptTemplate;
 
-    public SpringAiBoardGameService(ChatClient.Builder chatClientBuilder, GameRulesService gameRulesService) {
-        ChatOptions chatOptions = ChatOptions.builder()
-                .model("gpt-4o-mini")
-                .build();
-
-        this.chatClient = chatClientBuilder
-                .defaultOptions(chatOptions)
-                .build();
-
+    public SpringAiBoardGameService(ChatClient chatClient, ChatClient.Builder chatClientBuilder, GameRulesService gameRulesService) {
+        this.chatClient = chatClient;
         this.evaluator = new RelevancyEvaluator(chatClientBuilder);
         this.gameRulesService = gameRulesService;
     }
