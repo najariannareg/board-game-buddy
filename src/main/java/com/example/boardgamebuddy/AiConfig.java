@@ -32,4 +32,9 @@ public class AiConfig {
                 .build();
     }
 
+    @Bean
+    ChatMemory chatMemory(ConversationRepository repository) {
+        return new MongoChatMemory(repository);
+    }
+
 }
